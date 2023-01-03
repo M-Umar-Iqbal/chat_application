@@ -9,7 +9,8 @@ class CreateAccount extends StatefulWidget {
 }
 
 class _CreateAccountState extends State<CreateAccount> {
-  final TextEditingController _name = TextEditingController();
+  final TextEditingController _firstName = TextEditingController();
+  final TextEditingController _lastName = TextEditingController();
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
   bool isLoading = false;
@@ -67,20 +68,33 @@ class _CreateAccountState extends State<CreateAccount> {
                     height: size.height / 20,
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 18.0),
+                    padding: const EdgeInsets.symmetric(vertical: 5.0),
                     child: Container(
                       width: size.width,
                       alignment: Alignment.center,
-                      child: field(size, "Name", Icons.account_box, _name),
+                      child: field(
+                          size, "First Name", Icons.account_box, _firstName),
                     ),
                   ),
-                  Container(
-                    width: size.width,
-                    alignment: Alignment.center,
-                    child: field(size, "email", Icons.account_box, _email),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5.0),
+                    child: Container(
+                      width: size.width,
+                      alignment: Alignment.center,
+                      child: field(
+                          size, "Last Name", Icons.account_box, _lastName),
+                    ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 18.0),
+                    padding: const EdgeInsets.all(5.0),
+                    child: Container(
+                      width: size.width,
+                      alignment: Alignment.center,
+                      child: field(size, "email", Icons.mail, _email),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5.0),
                     child: Container(
                       width: size.width,
                       alignment: Alignment.center,
@@ -92,10 +106,10 @@ class _CreateAccountState extends State<CreateAccount> {
                   ),
                   customButton(size),
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(20.0),
                     child: GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: Text(
+                      child: const Text(
                         "Login",
                         style: TextStyle(
                           color: Colors.blue,
@@ -114,21 +128,24 @@ class _CreateAccountState extends State<CreateAccount> {
   Widget customButton(Size size) {
     return GestureDetector(
       onTap: () {
-        if (_name.text.isNotEmpty &&
+        if (_firstName.text.isNotEmpty &&
             _email.text.isNotEmpty &&
-            _password.text.isNotEmpty) {
+            _password.text.isNotEmpty &&
+            _lastName.text.isNotEmpty) {
           setState(() {
             isLoading = true;
           });
 
-          createAccount(_name.text, _email.text, _password.text).then((user) {
+          createAccount(_firstName.text.trim(), _lastName.text.trim(),
+                  _email.text.trim(), _password.text.trim())
+              .then((user) {
             if (user != null) {
               setState(() {
                 isLoading = false;
               });
-              Navigator.push(
+              Navigator.pushReplacement(
                   context, MaterialPageRoute(builder: (_) => HomeScreen()));
-              print("Account Created Sucessfull");
+              print("Account Created Successfully");
             } else {
               print("Login Failed");
               setState(() {

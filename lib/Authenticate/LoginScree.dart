@@ -24,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Container(
                 height: size.height / 20,
                 width: size.height / 20,
-                child: CircularProgressIndicator(),
+                child: const CircularProgressIndicator(),
               ),
             )
           : SingleChildScrollView(
@@ -37,7 +37,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerLeft,
                     width: size.width / 0.5,
                     child: IconButton(
-                        icon: Icon(Icons.arrow_back_ios), onPressed: () {}),
+                        icon: const Icon(Icons.arrow_back_ios),
+                        onPressed: () {}),
                   ),
                   SizedBox(
                     height: size.height / 50,
@@ -112,13 +113,13 @@ class _LoginScreenState extends State<LoginScreen> {
             isLoading = true;
           });
 
-          logIn(_email.text, _password.text).then((user) {
+          logIn(_email.text.trim(), _password.text.trim()).then((user) {
             if (user != null) {
               print("Login Successfull");
               setState(() {
                 isLoading = false;
               });
-              Navigator.push(
+              Navigator.pushReplacement(
                   context, MaterialPageRoute(builder: (_) => HomeScreen()));
             } else {
               print("Login Failed");
@@ -160,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
         decoration: InputDecoration(
           prefixIcon: Icon(icon),
           hintText: hintText,
-          hintStyle: TextStyle(color: Colors.grey),
+          hintStyle: const TextStyle(color: Colors.grey),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
           ),

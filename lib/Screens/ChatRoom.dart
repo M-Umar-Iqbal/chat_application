@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:bubble/bubble.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -75,10 +76,12 @@ class ChatRoom extends StatelessWidget {
   }
 
   void onSendMessage() async {
-    if (_message.text.isNotEmpty) {
+    if (_message.text.trim().isNotEmpty) {
       Map<String, dynamic> messages = {
         "sendby": _auth.currentUser!.displayName,
-        "message": _message.text,
+        "senderId": _auth.currentUser!.uid,
+        "chatroomId": chatRoomId,
+        "message": _message.text.trim(),
         "type": "text",
         "time": FieldValue.serverTimestamp(),
       };
@@ -99,9 +102,15 @@ class ChatRoom extends StatelessWidget {
     final size = MediaQuery.of(context).size;
 
     return GestureDetector(
-      onTap: () => Focus.of(context).unfocus(),
+      // onTap: () {
+      //   Focus.of(context).unfocus();
+      // },
       child: Scaffold(
         appBar: AppBar(
+          leading: const BackButton(
+            color: Colors.grey, // <-- SEE HERE
+          ),
+          backgroundColor: Colors.white,
           title: StreamBuilder<DocumentSnapshot>(
             stream:
                 _firestore.collection("users").doc(userMap['uid']).snapshots(),
@@ -113,15 +122,21 @@ class ChatRoom extends StatelessWidget {
                       const Icon(
                         Icons.person,
                         size: 40,
+                        color: Colors.grey,
                       ),
                       const SizedBox(width: 10),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(userMap['name']),
+                          Text(
+                            userMap['firstName'] + " " + userMap['lastName'],
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Colors.black),
+                          ),
                           Text(
                             snapshot.data!['status'],
-                            style: TextStyle(fontSize: 12),
+                            style: const TextStyle(
+                                fontSize: 12, color: Colors.green),
                           ),
                         ],
                       ),
@@ -150,13 +165,18 @@ class ChatRoom extends StatelessWidget {
                   builder: (BuildContext context,
                       AsyncSnapshot<QuerySnapshot> snapshot) {
                     if (snapshot.data != null) {
-                      return ListView.builder(
-                        itemCount: snapshot.data!.docs.length,
-                        itemBuilder: (context, index) {
-                          Map<String, dynamic> map = snapshot.data!.docs[index]
-                              .data() as Map<String, dynamic>;
-                          return messages(size, map, context);
-                        },
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                            top: 8.0, right: 8.0, left: 8.0),
+                        child: ListView.builder(
+                          itemCount: snapshot.data!.docs.length,
+                          itemBuilder: (context, index) {
+                            Map<String, dynamic> map =
+                                snapshot.data!.docs[index].data()
+                                    as Map<String, dynamic>;
+                            return messages(size, map, context);
+                          },
+                        ),
                       );
                     } else {
                       return Container();
@@ -192,7 +212,10 @@ class ChatRoom extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                        icon: Icon(Icons.send), onPressed: onSendMessage),
+                      icon: const Icon(Icons.send),
+                      onPressed: onSendMessage,
+                      color: Colors.blue,
+                    ),
                   ],
                 ),
               ),
@@ -210,21 +233,36 @@ class ChatRoom extends StatelessWidget {
             alignment: map['sendby'] == _auth.currentUser!.displayName
                 ? Alignment.centerRight
                 : Alignment.centerLeft,
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-              margin: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.blue,
-              ),
-              child: Text(
-                map['message'],
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
-              ),
+            // child: Container(
+            //   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+            //   margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+            //   decoration: BoxDecoration(
+            //     borderRadius: BorderRadius.circular(12),
+            //     color: Colors.blue,
+            //   ),
+            //   child: Text(
+            //     map['message'],
+            //     style: const TextStyle(
+            //       fontSize: 14,
+            //       fontWeight: FontWeight.w500,
+            //       color: Colors.white,
+            //     ),
+            //   ),
+            // ),
+            child: Bubble(
+              elevation: 2,
+              margin: BubbleEdges.only(top: 12),
+              alignment: map['sendby'] == _auth.currentUser!.displayName
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
+              nipWidth: 5,
+              nipHeight: 24,
+              nip: map['sendby'] == _auth.currentUser!.displayName
+                  ? BubbleNip.rightTop
+                  : BubbleNip.leftTop,
+              color: Color.fromARGB(255, 5, 165, 240),
+              child: Text(map['message'].toString().trim(),
+                  textAlign: TextAlign.right),
             ),
           )
         : Container(

@@ -41,16 +41,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
-  String chatRoomId(String user1, String user2) {
-    if (user1[0].toLowerCase().codeUnits[0] >
-        user2.toLowerCase().codeUnits[0]) {
-      return "$user1$user2";
+  String chatRoomId(String user1id, String user2id) {
+    if (user1id[0].toLowerCase().codeUnits[0] >
+        user2id.toLowerCase().codeUnits[0]) {
+      return "${user1id}${user2id}";
     } else {
-      return "$user2$user1";
+      return "${user2id}${user1id}";
     }
   }
 
   void onSearch() async {
+    if (_search.text.trim() == null || _search.text.trim().isEmpty) return;
     FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
     setState(() {
@@ -59,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     await _firestore
         .collection('users')
-        .where("email", isEqualTo: _search.text)
+        .where("email", isEqualTo: _search.text.trim())
         .get()
         .then((value) {
       setState(() {
@@ -76,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Home Screen"),
+        title: const Text("Chat"),
         actions: [
           IconButton(icon: Icon(Icons.logout), onPressed: () => logOut(context))
         ],
@@ -91,6 +92,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             )
           : Column(
               children: [
+                SizedBox(
+                  height: size.height / 20,
+                ),
+                Text(
+                  "Hello ${_auth.currentUser!.displayName}",
+                  style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey),
+                ),
                 SizedBox(
                   height: size.height / 20,
                 ),
@@ -117,38 +128,63 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
                 ElevatedButton(
                   onPressed: onSearch,
-                  child: Text("Search"),
+                  child: const Text(
+                    "Search",
+                    style: TextStyle(fontSize: 20),
+                  ),
                 ),
                 SizedBox(
                   height: size.height / 30,
                 ),
                 userMap != null
-                    ? ListTile(
-                        onTap: () {
-                          String roomId = chatRoomId(
-                              _auth.currentUser!.displayName!,
-                              userMap!['name']);
+                    ? Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Card(
+                          elevation: 5,
+                          child: ListTile(
+                            tileColor: Colors.white,
+                            onTap: () {
+                              String roomId = chatRoomId(
+                                  _auth.currentUser!.uid, userMap!['uid']);
 
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => ChatRoom(
-                                chatRoomId: roomId,
-                                userMap: userMap!,
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ChatRoom(
+                                    chatRoomId: roomId,
+                                    userMap: userMap!,
+                                  ),
+                                ),
+                              );
+                            },
+                            leading: const Icon(
+                              Icons.person,
+                              color: Colors.grey,
+                              size: 50,
+                            ),
+                            title: Text(
+                              userMap!['firstName'].toString().toUpperCase() +
+                                  " " +
+                                  userMap!['lastName'].toString().toUpperCase(),
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                          );
-                        },
-                        leading: Icon(Icons.account_box, color: Colors.black),
-                        title: Text(
-                          userMap!['name'],
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w500,
+                            subtitle: Text(
+                              userMap!['email'],
+                              style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            trailing: Icon(
+                              Icons.message,
+                              color: Colors.blue.shade900,
+                              size: 40,
+                            ),
                           ),
                         ),
-                        subtitle: Text(userMap!['email']),
-                        trailing: Icon(Icons.chat, color: Colors.black),
                       )
                     : Container(),
               ],
